@@ -8,7 +8,7 @@ import game.item.SeedType;
 public class KeyHandler implements KeyListener{
 	
 	public SeedType selectedSeed = SeedType.CARROT;
-	public boolean upPressed, downPressed, leftPressed, rightPressed, spacePressed;
+	public boolean upPressed, downPressed, leftPressed, rightPressed, spacePressed,waterPressed,harvestPressed;
 	
 	@Override
 	public void keyTyped(KeyEvent e) {
@@ -47,7 +47,14 @@ public class KeyHandler implements KeyListener{
 		if(code == KeyEvent.VK_SPACE) {
 			spacePressed = true;
 		}
-	}
+        if (code == KeyEvent.VK_F) {
+            waterPressed = true;
+        }
+        if (code == KeyEvent.VK_H){
+            harvestPressed = true;
+        }
+
+    }
 
 	@Override
 	public void keyReleased(KeyEvent e) {
@@ -68,5 +75,12 @@ public class KeyHandler implements KeyListener{
 		if(code == KeyEvent.VK_SPACE) {
 			spacePressed = false;
 		}
-	}
+        if (code == KeyEvent.VK_F){
+            waterPressed = false;
+        }
+        if (code == KeyEvent.VK_H){
+            harvestPressed = false;
+        }
+
+    }
 }

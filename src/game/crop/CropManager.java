@@ -3,6 +3,7 @@ package game.crop;
 import java.awt.Graphics2D;
 import java.util.ArrayList;
 
+import game.item.ProduceType;
 import game.item.SeedType;
 import game.main.GamePanel;
 
@@ -16,7 +17,7 @@ public class CropManager {
 
     public void plant(Crop crop) {
         if (crop != null)
-        crops.add(crop);
+            crops.add(crop);
     }
 
     public boolean hasCrop(int col, int row) {
@@ -27,10 +28,17 @@ public class CropManager {
         return false;
     }
 
+    public Crop getCropAt(int col, int row) {
+        for (Crop c : crops) {
+            if (c.col == col && c.row == row) return c;
+        }
+        return null;
+    }
+
     public void update() {
         int day = gp.gameTime.day;
-        for(Crop c : crops) {
-            if(c != null) c.update(day);
+        for (Crop c : crops) {
+            if (c != null) c.update(day);
         }
     }
 
@@ -41,36 +49,43 @@ public class CropManager {
             }
         }
     }
+
     // WATERING
     public void waterCrop(int col, int row) {
-        for(Crop c : crops) {
-            if(c.col == col && c.row == row) {
-                c.water();
+        for (Crop c : crops) {
+            if (c.col == col && c.row == row) {
+                c.water(gp.gameTime.day);
                 break;
             }
         }
     }
-    // FER
-    public void fertilizeCrop(int col, int row) {
-        for(Crop c : crops) {
-            if(c.col == col && c.row == row) {
-                c.fertilize();
-                break;
-            }
-        }
-    }
+
     // HARVEST
     public void harvestCrop(int col, int row) {
         Crop target = null;
-        for(Crop c : crops) {
-            if(c.col == col && c.row == row) {
+        for (Crop c : crops) {
+            if (c.col == col && c.row == row) {
                 target = c;
                 break;
             }
         }
-    if(target != null && target.canHarvest()) {
-        crops.remove(target);
-        gp.soilState[col][row] = game.tile.SoilState.EMPTY;
-        gp.player.seedInv.addSeed(SeedType.valueOf(target.type.name()),target.type.harvestAmount);
+        if (target != null && target.canHarvest()) {
+            crops.remove(target);
+            gp.soilState[col][row] = game.tile.SoilState.EMPTY;
+            gp.player.produceInv.addProduce(ProduceType.valueOf(target.type.name()), target.type.harvestAmount);
+            gp.player.seedInv.addSeed(SeedType.valueOf(target.type.name()), target.type.SeedReturn);
+        }
     }
-}}
+    public void debugPrint() {
+        int day = gp.gameTime.day;
+        for (Crop c : crops) {
+            System.out.println(
+                    c.type + " | dayPassed=" + (day - c.plantedDay)
+                            + " | status=" + c.status
+                            + " | w2=" + c.wCountSt2 + "/" + c.reWaterSt2
+                            + " | w3=" + c.wCountSt3 + "/" + c.reWaterSt3
+            );
+        }
+    }
+
+}

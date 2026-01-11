@@ -9,6 +9,7 @@ import javax.imageio.ImageIO;
 
 import game.crop.Crop;
 import game.crop.CropType;
+import game.item.ProduceInventory;
 import game.item.SeedInventory;
 import game.item.SeedType;
 import game.main.GamePanel;
@@ -25,6 +26,8 @@ public class Player extends Entity {
     public int directionX = 0, directionY = 1;
     public SeedType currentSeed = SeedType.CARROT;
     public SeedInventory seedInv = new SeedInventory();
+    public ProduceInventory produceInv = new ProduceInventory();
+
 
     private BufferedImage idleUp, idleDown, idleLeft, idleRight;
     private BufferedImage[] walkUp;
@@ -158,6 +161,16 @@ public class Player extends Entity {
         if(gp.mouseH.leftPressed) {
 //        	interactWithObject();
         }
+        //tuoi cay thu hoach
+        if (keyH.waterPressed) {
+            waterCrop();
+            keyH.waterPressed = false;
+        }
+
+        if (keyH.harvestPressed) {
+            harvestCrop();
+            keyH.harvestPressed = false;
+        }
 
         currentSeed = keyH.selectedSeed;
     }
@@ -174,39 +187,36 @@ public class Player extends Entity {
         CropType type = currentSeed.cropType;
         int daysToSt2 = type.daysToSt2;
         int daysToSt3 = type.daysToSt3;
-        int reWaterSt2, reWaterSt3, reFer;
+        int reWaterSt2, reWaterSt3;
         switch(currentSeed){
         case CARROT:
         	reWaterSt2 = 1;
         	reWaterSt3 = 1;
-        	reFer      = 1;
         	break;
         case TOMATO:
         	reWaterSt2 = 2;
         	reWaterSt3 = 3;
-        	reFer      = 2;
         	break;
         case RICE:
         	reWaterSt2 = 4;
         	reWaterSt3 = 5;
-        	reFer       = 3;
         	break;
         case SUNFLOWER:
         	reWaterSt2 = 2;
         	reWaterSt3 = 1;
-        	reFer      = 2;
         	break;
         default: 
         	reWaterSt2 =1;
         	reWaterSt3 = 1;
-        	reFer = 0;
+
         }
-        Crop crop = new Crop(type,col,row,gp.gameTime.day,daysToSt2,reWaterSt2,daysToSt3,reWaterSt3,reFer);
+        Crop crop = new Crop(type,col,row,gp.gameTime.day,daysToSt2,reWaterSt2,daysToSt3,reWaterSt3);
         gp.cropM.plant(crop);
         seedInv.useSeed(currentSeed);
     }
 
     private boolean canPlant(int col, int row) {
+        int tileNum = gp.tileM.mapTileNum[col][row];
         if (col < 0 || row < 0 || col >= gp.maxWorldCol || row >= gp.maxWorldRow)
             return false;
         if (gp.soilState[col][row] != SoilState.EMPTY)
@@ -215,9 +225,52 @@ public class Player extends Entity {
             return false;
         if (gp.cropM.hasCrop(col, row))
             return false;
+        if(tileNum != 1)
+            return false;
 
         return true;
     }
+    private void waterCrop() {
+        int footX = worldX + solidArea.x + solidArea.width / 2;
+        int footY = worldY + solidArea.y + solidArea.height - 1;
+
+        int col = footX / gp.tileSize;
+        int row = footY / gp.tileSize;
+
+        if (!canWater(col, row)) return;
+
+        gp.cropM.waterCrop(col, row);
+    }
+
+    private boolean canWater(int col, int row) {
+        if (col < 0 || row < 0 || col >= gp.maxWorldCol || row >= gp.maxWorldRow)
+            return false;
+        if (!gp.cropM.hasCrop(col, row))
+            return false;
+
+        return true;
+    }
+    private void harvestCrop() {
+        int footX = worldX + solidArea.x + solidArea.width / 2;
+        int footY = worldY + solidArea.y + solidArea.height;
+
+        int col = footX / gp.tileSize;
+        int row = footY / gp.tileSize;
+
+        if (!canHarvest(col, row)) return;
+
+        gp.cropM.harvestCrop(col, row);
+    }
+
+    private boolean canHarvest(int col, int row) {
+        if (col < 0 || row < 0 || col >= gp.maxWorldCol || row >= gp.maxWorldRow)
+            return false;
+        if (!gp.cropM.hasCrop(col, row))
+            return false;
+
+        return true;
+    }
+
     private BufferedImage[] getCurrentFrames() {
         switch (direction) {
             case "up":    return walkUp;

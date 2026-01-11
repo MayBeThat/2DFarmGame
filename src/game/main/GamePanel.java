@@ -5,6 +5,7 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.util.EnumMap;
 
 import javax.imageio.ImageIO;
 import javax.swing.JPanel;
@@ -12,6 +13,7 @@ import javax.swing.JPanel;
 import game.crop.CropManager;
 import game.crop.CropType;
 import game.entity.Player;
+import game.item.ProduceType;
 import game.object.FigureHead;
 import game.object.GameObject;
 import game.object.House;
@@ -41,11 +43,12 @@ public class GamePanel extends JPanel implements Runnable{
 	public SoilState[][] soilState;
 	public BufferedImage dirtImg;
 	public BufferedImage seedlingImg;
-	public CropManager cropM;
+    public CropManager cropM;
 	public GameTime gameTime;
 	public UI ui;
 	public GameObject[] objects;
-	
+
+
 	public final int maxWorldCol = 50;
 	public final int maxWorldRow = 50;
 	public final int worldWidth = tileSize * maxWorldCol;
@@ -77,6 +80,7 @@ public class GamePanel extends JPanel implements Runnable{
 		initSoil();
 		loadSoilImages();
 		loadCropImages();
+        loadProduceIcons();
 		setupObjects();
 	}
 	
@@ -111,10 +115,10 @@ public class GamePanel extends JPanel implements Runnable{
 		}catch(Exception e) {
 			e.printStackTrace();
 		}
-		CropType.CARROT.setImages(loadCrop("Carrot",2));
-		CropType.TOMATO.setImages(loadCrop("Tomato",2));
-		CropType.RICE.setImages(loadCrop("Rice",2));
-		CropType.SUNFLOWER.setImages(loadCrop("Sunflower",2));
+		CropType.CARROT.setImages(loadCrop("Carrot",3));
+		CropType.TOMATO.setImages(loadCrop("Tomato",3));
+		CropType.RICE.setImages(loadCrop("Rice",3));
+		CropType.SUNFLOWER.setImages(loadCrop("Sunflower",3));
 	}
 	
 	public BufferedImage[] loadCrop(String name,int stages) {
@@ -128,8 +132,21 @@ public class GamePanel extends JPanel implements Runnable{
 		}}
 		return imgs;
 	}
-	
-	public void startGameThread() {
+    private void loadProduceIcons() {
+        for (game.item.ProduceType type : game.item.ProduceType.values()) {
+            try {
+                String path = "/crop/" + type.name() + "_product.png";
+                BufferedImage img = ImageIO.read(getClass().getResourceAsStream(path));
+                type.setIcon(img);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+
+    public void startGameThread() {
 		gameThread = new Thread(this);
 		gameThread.start();
 		this.requestFocusInWindow();
@@ -164,11 +181,13 @@ public class GamePanel extends JPanel implements Runnable{
 			
 			if(timer >= 1000000000) {
 				System.out.println("Fps:" +drawCount);
+                cropM.debugPrint();
 				drawCount =0;
 				timer =0;
 			}
 		}
-	}
+
+    }
 	
 	public void update(double delta) {
 		gameTime.update(delta);

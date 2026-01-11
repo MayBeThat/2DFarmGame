@@ -21,6 +21,7 @@ public class UI {
         drawTime(g2);
         drawSeedInfo(g2);
         drawSoilInfo(g2);
+        drawProduceInventory(g2);
     }
 
     // DRAW TIME
@@ -58,25 +59,85 @@ private void drawSeedInfo(Graphics2D g2) {
 // DRAW DIRT
 private void drawSoilInfo(Graphics2D g2) {
 
-    int col = (gp.player.worldX + gp.player.directionX * gp.tileSize) / gp.tileSize;
-    int row = (gp.player.worldY + gp.player.directionY * gp.tileSize) / gp.tileSize;
+    int footX = gp.player.worldX + gp.player.solidArea.x + gp.player.solidArea.width / 2;
+    int footY = gp.player.worldY + gp.player.solidArea.y + gp.player.solidArea.height;
 
+    int col = footX / gp.tileSize;
+    int row = footY / gp.tileSize;
     if(col < 0 || row < 0 || col >= gp.maxWorldCol || row >= gp.maxWorldRow) return;
 
-    if(gp.tileM.mapTileNum[col][row] != TileManager.DIRT_PLANT) return;
+    int tileNum = gp.tileM.mapTileNum[col][row];
+    if(tileNum !=1) return;
+
+    int x = 20;
+    int y = 220;
 
     SoilState state = gp.soilState[col][row];
+    g2.setColor(Color.yellow);
+    // Soil state
+    g2.drawString("Soil: " + state.name(), x, y);
+    y += 18;
+    // Crop info
+    var crop = gp.cropM.getCropAt(col, row);
+    if(crop == null) {
+        g2.drawString("Crop: NONE", x, y);
+        return;
+    }
+    g2.drawString("Crop: " + crop.type.name() + " | Stage: " + crop.getStatus(), x, y);
+    y += 18;
+    // Watered today
+    g2.setColor(crop.isWateredToday(gp.gameTime.day) ? Color.green : Color.red);
+    g2.drawString(crop.isWateredToday(gp.gameTime.day) ? "Watered Today" : "Need Water", x, y);
+}
+    private void drawProduceInventory(Graphics2D g2) {
+        // Vị trí bảng
+        int startX = 140;
+        int startY = 330;
 
-    String text = "Soil: ";
+        // Kích thước slot
+        int slotSize = 36;
+        int padding = 20;       // khoảng cách giữa slot
+        int cols = 6;          // 6 ô một hàng
 
-    switch(state) {
-        case EMPTY -> text += "EMPTY";
-        case READY -> text += "READY";
+        // Danh sách item để vẽ theo thứ tự
+        game.item.ProduceType[] items = game.item.ProduceType.values();
+
+        // Vẽ từng slot
+        for (int i = 0; i < items.length; i++) {
+            int r = i / cols;
+            int c = i % cols;
+
+            int x = startX + c * (slotSize + padding);
+            int y = startY + r * (slotSize + padding);
+            // slot background
+            g2.setColor(new Color(200, 200, 200, 220));
+            g2.fillRoundRect(x, y, slotSize, slotSize, 8, 8);
+            // slot border
+            g2.setColor(new Color(80, 80, 80, 255));
+            g2.drawRoundRect(x, y, slotSize, slotSize, 8, 8);
+            // icon
+            var type = items[i];
+            var icon = type.getIcon();
+            if (icon != null) {
+                int iconSize = slotSize - 10;
+                int ix = x + (slotSize - iconSize) / 2;
+                int iy = y + (slotSize - iconSize) / 2;
+                g2.drawImage(icon, ix, iy, iconSize, iconSize, null);
+            }
+            // amount
+            int amount = gp.player.produceInv.getAmount(type);
+            if (amount > 0) {
+                String txt = String.valueOf(amount);
+                // shadow
+                g2.setColor(Color.black);
+                g2.drawString(txt, x + slotSize - 10 - txt.length() * 6, y + slotSize - 6);
+                // white number
+                g2.setColor(Color.white);
+                g2.drawString(txt, x + slotSize - 11 - txt.length() * 6, y + slotSize - 7);
+            }
+        }
     }
 
-    g2.setColor(Color.yellow);
-    g2.drawString(text, 20, 220);
-}
 
 
 }

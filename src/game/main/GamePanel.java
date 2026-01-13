@@ -25,6 +25,7 @@ import game.tile.TileManager;
 import game.time.GameTime;
 import game.ui.UI;
 
+
 public class GamePanel extends JPanel implements Runnable{
 	
 	final int originalTileSize = 16;
@@ -32,9 +33,10 @@ public class GamePanel extends JPanel implements Runnable{
 	//SYSTEM
 	public MouseHandler mouseH = new MouseHandler();
 	public KeyHandler keyH = new KeyHandler();
-	
-	
-	public final int tileSize = originalTileSize* scale;
+    public Runnable onBackToMenu;
+
+
+    public final int tileSize = originalTileSize* scale;
 	public final int maxScreenCol = 16;
 	public final int maxScreenRow = 12;
 	public final int screenWidth = tileSize * maxScreenCol;
@@ -56,6 +58,8 @@ public class GamePanel extends JPanel implements Runnable{
 	
 	int FPS = 60;
 	Thread gameThread;
+    private Runnable onPause;
+    public boolean paused = false;
 	public CollisionChecker cChecker = new CollisionChecker(this);
 	public ObjectManager objectManager;
 	public TileManager tileM = new TileManager(this);
@@ -135,8 +139,7 @@ public class GamePanel extends JPanel implements Runnable{
     private void loadProduceIcons() {
         for (game.item.ProduceType type : game.item.ProduceType.values()) {
             try {
-                String path = "/crop/" + type.name() + "_product.png";
-                BufferedImage img = ImageIO.read(getClass().getResourceAsStream(path));
+                BufferedImage img = ImageIO.read(getClass().getResourceAsStream("/crop/" + type.name() + "_product.png"));
                 type.setIcon(img);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -147,10 +150,20 @@ public class GamePanel extends JPanel implements Runnable{
 
 
     public void startGameThread() {
-		gameThread = new Thread(this);
-		gameThread.start();
-		this.requestFocusInWindow();
-	}
+        if (gameThread != null) return;
+        gameThread = new Thread(this);
+        gameThread.start();
+        this.requestFocusInWindow();
+    }
+    public void stopGameThread() {
+        gameThread = null;
+    }
+    public void setOnBackToMenu(Runnable r) {
+        this.onBackToMenu = r;
+    }
+    public void setOnPause(Runnable r) {
+        this.onPause = r;
+    }
 	
 	@Override
 	public void addNotify() {
@@ -188,12 +201,21 @@ public class GamePanel extends JPanel implements Runnable{
 		}
 
     }
-	
-	public void update(double delta) {
-		gameTime.update(delta);
-		player.update();
-		cropM.update();	
-	}
+
+    public void update(double delta) {
+        if (keyH.escPressed) {
+            keyH.escPressed = false;
+            if (!paused) {
+                paused = true;
+                if (onPause != null) onPause.run();
+            }
+        }
+        if (paused) return;
+
+        gameTime.update(delta);
+        cropM.update();
+        player.update();
+    }
 	
 	public void paintComponent(Graphics g) {
 		super.paintComponent(g);

@@ -18,6 +18,7 @@ public class CropManager {
     public void plant(Crop crop) {
         if (crop != null)
             crops.add(crop);
+        gp.soilState[crop.col][crop.row] = game.tile.SoilState.PLANTED;
     }
 
     public boolean hasCrop(int col, int row) {

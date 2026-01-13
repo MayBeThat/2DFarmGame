@@ -139,6 +139,32 @@ public class TileManager {
         }	
         
     }
+    public BufferedImage renderScreenBackground(int startCol, int startRow) {
+        BufferedImage img = new BufferedImage(gp.screenWidth, gp.screenHeight, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2 = img.createGraphics();
 
-   
+        for (int row = 0; row < gp.maxScreenRow; row++) {
+            for (int col = 0; col < gp.maxScreenCol; col++) {
+
+                int worldCol = startCol + col;
+                int worldRow = startRow + row;
+
+                if (worldCol < 0 || worldRow < 0 || worldCol >= gp.maxWorldCol || worldRow >= gp.maxWorldRow) continue;
+
+                int tileNum = mapTileNum[worldCol][worldRow];
+                BufferedImage tileImg = tile[tileNum].image;
+
+                int x = col * gp.tileSize;
+                int y = row * gp.tileSize;
+
+                g2.drawImage(tileImg, x, y, gp.tileSize, gp.tileSize, null);
+            }
+        }
+
+        g2.dispose();
+        return img;
     }
+
+
+
+}
